@@ -85,6 +85,7 @@ public class Drive extends OpMode {
             }
         }
 
+        telemetry.addData("Raised:", paddle.isRaised());
         telemetry.addData("Motor 1 Power:", motor1.getPower());
         telemetry.addData("Motor 2 Power:", motor2.getPower());
         telemetry.addData("Motor 1 Speed:", motor1.getVelocity());

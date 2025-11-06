@@ -20,10 +20,10 @@ import dev.nextftc.extensions.pedro.FollowPath;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 
-@Autonomous(name = "Shoot 3 balls - Red")
-public class Shoot3Red extends NextFTCOpMode {
+@Autonomous(name = "Shoot 3 balls - Blue")
+public class Shoot3Blue extends NextFTCOpMode {
 
-    public Shoot3Red() {
+    public Shoot3Blue() {
         // Register components: our subsystem + Pedro’s follower
         addComponents(
                 new SubsystemComponent(Launcher.INSTANCE),
@@ -39,7 +39,7 @@ public class Shoot3Red extends NextFTCOpMode {
 
                         new BezierLine(new Pose(0, 0), new Pose(96.5, 0))
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(-233))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(233))
                 .build();
     }
 
