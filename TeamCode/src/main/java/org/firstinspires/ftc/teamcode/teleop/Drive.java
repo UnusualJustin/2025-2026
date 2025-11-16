@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.TeleopConstants;
+import org.firstinspires.ftc.teamcode.targeting.AimingTargetCalculator;
 
 @Configurable
 @TeleOp
@@ -22,8 +23,8 @@ public class Drive extends OpMode {
     private LauncherController launcher;
     private PaddleController paddle;
 
-    DcMotorEx motor1;// = hardwareMap.get(DcMotorEx .class, "motor1");
-    DcMotorEx motor2;// = hardwareMap.get(DcMotorEx.class, "motor2");
+    DcMotorEx motor1;
+    DcMotorEx motor2;
 
     Servo light;
 
@@ -49,8 +50,7 @@ public class Drive extends OpMode {
         follower.deactivateAllPIDFs();
         follower.activateTranslational();
         follower.activateHeading();
-        //follower.activateDrive();
-
+        
         launcher.runFast();
 
         follower.setStartingPose(new Pose(56, 8, Math.toRadians(180)));
@@ -111,17 +111,10 @@ public class Drive extends OpMode {
         }
 
         if (gamepad1.rightBumperWasPressed()) {
-            // rotate robot to shooting heading
-            Pose pose = follower.getPose();
-            Pose target = new Pose(0,143);
-            double dx = target.getX() - pose.getX();
-            double dy = target.getY() - pose.getY();
-            double shootingAngleRad = Math.atan2(dx, dy);
-            double shootingAgnle = Math.toDegrees(shootingAngleRad);
-            if (shootingAgnle < 0) {
-                shootingAgnle += 360;
-            }
-            follower.turnToDegrees(shootingAgnle);
+            Pose2d aimPose = AimingTargetCalculator.computeAimPose(follower.getPose(), AimingTargetCalculator.Goal.BLUE_GOAL);
+
+            follower.holdPoint(aimPose);
+            isHolding = true;
         }
 
         if (paddle.isRaised()) {
