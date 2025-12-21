@@ -1,18 +1,16 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-
-import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.ftcontrol.panels.Panels;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import com.bylazar.telemetry.TelemetryManager;
+import com.bylazar.ftcontrol.panels.integration.TelemetryManager;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 @TeleOp(name = "Test Graph")
 public class PanelsGraphTest extends OpMode {
-    private TelemetryManager PanelsTelemetry = new TelemetryManager(); // Ensure getter matches your library
+    private TelemetryManager panelsTelemetry= Panels.getTelemetry(); // Ensure getter matches your library
     private final ElapsedTime timer = new ElapsedTime();
 
     private double sinVariable = 0.0;
@@ -49,16 +47,16 @@ public class PanelsGraphTest extends OpMode {
 
         squareWave = (Math.sin(2 * Math.PI * 0.5 * t) > 0) ? 1.0 : -1.0;
 
-        PanelsTelemetry.addData("sin", sinVariable);
-        PanelsTelemetry.addData("cos", cosVariable);
-        PanelsTelemetry.addData("dampedSine", dampedSine);
-        PanelsTelemetry.addData("ramp", ramp);
-        PanelsTelemetry.addData("lissajous", lissajous);
-        PanelsTelemetry.addData("square", squareWave);
-        PanelsTelemetry.addData("const", constVariable);
+        panelsTelemetry.graph("sin", sinVariable);
+        panelsTelemetry.graph("cos", cosVariable);
+        panelsTelemetry.graph("dampedSine", dampedSine);
+        panelsTelemetry.graph("ramp", ramp);
+        panelsTelemetry.graph("lissajous", lissajous);
+        panelsTelemetry.graph("square", squareWave);
+        panelsTelemetry.graph("const", constVariable);
 
-        PanelsTelemetry.addLine("extra1:" + t + " extra2:" + (t * t) + " extra3:" + Math.sqrt(t));
+        panelsTelemetry.debug("extra1:" + t + " extra2:" + (t * t) + " extra3:" + Math.sqrt(t));
 
-        PanelsTelemetry.update();
+        panelsTelemetry.update(telemetry);
     }
 }
