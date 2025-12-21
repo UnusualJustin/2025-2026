@@ -7,7 +7,6 @@ import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.core.subsystems.Subsystem;
 import dev.nextftc.hardware.controllable.RunToPosition;
-import dev.nextftc.hardware.impl.MotorEx;
 import dev.nextftc.hardware.impl.ServoEx;
 
 // --- Subsystem: Launcher (flywheel + feeder) ---
@@ -42,5 +41,8 @@ public class Launcher implements Subsystem {
     public void periodic() {
         ///motor1.setPower(controlSystem.calculate(motor1.getState()));
         //motor2.setPower(controlSystem.calculate(motor2.getState()));
+    }
+
+    public static class PanelsGraphTest {
     }
 }
