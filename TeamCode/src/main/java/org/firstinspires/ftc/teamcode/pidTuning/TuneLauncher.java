@@ -1,5 +1,10 @@
 package org.firstinspires.ftc.teamcode.pidTuning;
 
+import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -15,10 +20,21 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
  * - toleranceVelocity
  */
 @TeleOp(name = "TUNE: Launcher Flywheel Velocity", group = "Tuning")
+@Configurable
 public class TuneLauncher extends LinearOpMode {
+
+    private TelemetryManager panelsTelemetry;
 
     @Override
     public void runOpMode() {
+        panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+
+        panelsTelemetry.addData("Target", 0);
+        panelsTelemetry.addData("Error", 0);
+        panelsTelemetry.addData("Measured", 0);
+
+        panelsTelemetry.update();
+
         DcMotorEx flywheelMotor = hardwareMap.get(DcMotorEx.class, "launcher");
 
         // We are doing our own velocity control -> avoid built-in velocity mode.
@@ -26,10 +42,6 @@ public class TuneLauncher extends LinearOpMode {
         flywheelMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         LauncherFlywheelController controller = new LauncherFlywheelController(flywheelMotor);
-
-        telemetry.addLine("Panels: edit LauncherFlywheelTuning.* while running");
-        telemetry.addLine("Use targetVelocity in ticks/sec (same units as motor.getVelocity())");
-        telemetry.update();
 
         waitForStart();
 
@@ -48,19 +60,11 @@ public class TuneLauncher extends LinearOpMode {
             double targetVel = LauncherFlywheelTuning.targetVelocity;
             double error = targetVel - measuredVel;
 
-            telemetry.addData("Target (ticks/s)", targetVel);
-            telemetry.addData("Measured (ticks/s)", measuredVel);
-            telemetry.addData("Error (ticks/s)", error);
-            telemetry.addData("At Speed", controller.isAtSpeed());
+            panelsTelemetry.addData("Target", targetVel);
+            panelsTelemetry.addData("Error", error);
+            panelsTelemetry.addData("Measured", measuredVel);
 
-            telemetry.addData("kP", LauncherFlywheelTuning.pid.kP);
-            telemetry.addData("kI", LauncherFlywheelTuning.pid.kI);
-            telemetry.addData("kD", LauncherFlywheelTuning.pid.kD);
-            telemetry.addData("ffV", LauncherFlywheelTuning.ffV);
-            telemetry.addData("ffA", LauncherFlywheelTuning.ffA);
-            telemetry.addData("ffS", LauncherFlywheelTuning.ffS);
-
-            telemetry.update();
+            panelsTelemetry.update();
         }
 
         controller.stop();
