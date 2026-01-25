@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.TeleopConstants;
@@ -27,6 +28,9 @@ public class Drive extends OpMode {
     Servo paddleServo;
     LauncherFlywheelController controller;
 
+    DcMotorEx kickstandMotor;
+
+
     private int loopCount = 0;
 
     public Follower follower;
@@ -43,7 +47,12 @@ public class Drive extends OpMode {
         //motor2 = hardwareMap.get(DcMotorEx.class, "motor2");
 
         paddleServo = hardwareMap.get(Servo.class, "paddleServo");
+        paddleServo.setPosition(.35);
         //light = hardwareMap.get(Servo.class, "light");
+
+        kickstandMotor = hardwareMap.get(DcMotorEx.class, "kickstandMotor");
+        kickstandMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        kickstandMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         follower = TeleopConstants.createFollower(hardwareMap);
 //        follower.deactivateAllPIDFs();
@@ -71,7 +80,7 @@ public class Drive extends OpMode {
     @Override
     public void start() {
         //intakeMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        LauncherFlywheelTuning.targetVelocity = 600;
+        LauncherFlywheelTuning.targetVelocity = 90;
     }
 
     private boolean isHolding = false;
@@ -128,11 +137,20 @@ public class Drive extends OpMode {
             paddleServo.setPosition(.35);
         }
 
-        if (gamepad2.aWasPressed() || gamepad1.aWasPressed()){
+        if (gamepad1.aWasPressed()){
             intakeMotor.setPower(1);
-        } else if (gamepad2.bWasPressed() || gamepad1.bWasPressed()){
+        } else if (gamepad1.bWasPressed()){
             intakeMotor.setPower(0);
         }
+
+        if (gamepad1.leftBumperWasPressed()){
+            kickstandMotor.setTargetPosition(300);
+            kickstandMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            //kickstandMotor.setPower(15);
+        }
+
+        telemetry.addData("kickstandPosition", kickstandMotor.getCurrentPosition());
 
 
         telemetry.update();
