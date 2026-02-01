@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.TeleopConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pidTuning.LauncherFlywheelController;
 import org.firstinspires.ftc.teamcode.pidTuning.LauncherFlywheelTuning;
 import org.firstinspires.ftc.teamcode.targeting.AimingCalculator;
@@ -54,7 +54,7 @@ public class Drive extends OpMode {
         kickstandMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         kickstandMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        follower = TeleopConstants.createFollower(hardwareMap);
+        follower = Constants.createFollower(hardwareMap);
 //        follower.deactivateAllPIDFs();
 //        follower.activateTranslational();
 //        follower.activateHeading();

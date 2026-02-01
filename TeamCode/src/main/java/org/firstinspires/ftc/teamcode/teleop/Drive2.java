@@ -18,7 +18,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-import org.firstinspires.ftc.teamcode.pedroPathing.TeleopConstants;
 import org.firstinspires.ftc.teamcode.pidTuning.LauncherFlywheelController;
 import org.firstinspires.ftc.teamcode.pidTuning.LauncherFlywheelTuning;
 import org.firstinspires.ftc.teamcode.targeting.AimingCalculator;
@@ -80,11 +79,11 @@ public class Drive2 extends OpMode {
     @Override
     public void loop() {
         controller.update();
-        //follower.update();
+        follower.update();
         telemetry.update();
         //telemetryM.update();
 
-      /*  if (!automatedDrive) {
+        if (!automatedDrive) {
             //This is the normal version to use in the TeleOp
             follower.setTeleOpDrive(
                     -gamepad1.left_stick_y,
@@ -123,7 +122,7 @@ public class Drive2 extends OpMode {
             kickvar = true;
             kickstandMotor.setPower(1);
         }
-*/
+
 //        telemetryM.debug("position", follower.getPose());
 //        telemetryM.debug("velocity", follower.getVelocity());
 //        telemetryM.debug("automatedDrive", automatedDrive);

@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -27,6 +28,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 public class TuneLauncher extends LinearOpMode {
 
     private TelemetryManager panelsTelemetry;
+
+    Servo paddleServo;
 
     @Override
     public void runOpMode() {
@@ -47,6 +50,10 @@ public class TuneLauncher extends LinearOpMode {
 
         LauncherFlywheelController controller = new LauncherFlywheelController(flywheelMotor);
 
+        paddleServo = hardwareMap.get(Servo.class, "paddleServo");
+        paddleServo.setPosition(.58); // .35
+
+
         waitForStart();
 
         while (opModeIsActive()) {
@@ -63,6 +70,16 @@ public class TuneLauncher extends LinearOpMode {
             double measuredVel = flywheelMotor.getVelocity();
             double targetVel = LauncherFlywheelTuning.targetVelocity;
             double error = targetVel - measuredVel;
+
+            if (gamepad1.rightBumperWasPressed()) {
+                paddleServo.setPosition(.83); // .60
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                paddleServo.setPosition(.58); // .35
+            }
 
             panelsTelemetry.addData("Target", targetVel);
             panelsTelemetry.addData("Error", error);
