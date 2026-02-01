@@ -16,10 +16,12 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.TeleopConstants;
 import org.firstinspires.ftc.teamcode.pidTuning.LauncherFlywheelController;
 import org.firstinspires.ftc.teamcode.pidTuning.LauncherFlywheelTuning;
+import org.firstinspires.ftc.teamcode.targeting.AimingCalculator;
 
 import java.util.function.Supplier;
 
@@ -28,8 +30,11 @@ import java.util.function.Supplier;
 public class Drive2 extends OpMode {
     private Follower follower;
     public static Pose startingPose; //See ExampleAuto to understand how to use this
+    private boolean kickvar = false; //
     private boolean automatedDrive;
     private TelemetryManager telemetryM;
+
+    AimingCalculator aimCalc;
 
     DcMotorEx intakeMotor;
 
@@ -52,29 +57,34 @@ public class Drive2 extends OpMode {
         intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
 
         paddleServo = hardwareMap.get(Servo.class, "paddleServo");
-        paddleServo.setPosition(.35);
+        paddleServo.setPosition(.58); // .35
 
         flywheelMotor = hardwareMap.get(DcMotorEx.class, "launcher");
 
         flywheelMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flywheelMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        flywheelMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         controller = new LauncherFlywheelController(flywheelMotor);
+
+        //kickstandMotor = hardwareMap.get(DcMotorEx.class, "kickstandMotor");
+        //kickstandMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //kickstandMotor.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     @Override
     public void start() {
         follower.startTeleopDrive();
-        LauncherFlywheelTuning.targetVelocity = 90;
+        LauncherFlywheelTuning.targetVelocity = 1500;
     }
 
     @Override
     public void loop() {
         controller.update();
-        follower.update();
-        telemetryM.update();
+        //follower.update();
+        telemetry.update();
+        //telemetryM.update();
 
-        if (!automatedDrive) {
+      /*  if (!automatedDrive) {
             //This is the normal version to use in the TeleOp
             follower.setTeleOpDrive(
                     -gamepad1.left_stick_y,
@@ -86,13 +96,13 @@ public class Drive2 extends OpMode {
 
 
         if (gamepad1.rightBumperWasPressed()) {
-            paddleServo.setPosition(.6);
+            paddleServo.setPosition(.83); // .60
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            paddleServo.setPosition(.35);
+            paddleServo.setPosition(.58); // .35
         }
 
         if (gamepad1.aWasPressed()){
@@ -107,11 +117,38 @@ public class Drive2 extends OpMode {
             LauncherFlywheelTuning.targetVelocity -= 20;
         }
 
-        telemetryM.debug("position", follower.getPose());
-        telemetryM.debug("velocity", follower.getVelocity());
-        telemetryM.debug("automatedDrive", automatedDrive);
+        if (gamepad1.xWasPressed()){
+            kickstandMotor.setTargetPosition(800);
+            kickstandMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            kickvar = true;
+            kickstandMotor.setPower(1);
+        }
+*/
+//        telemetryM.debug("position", follower.getPose());
+//        telemetryM.debug("velocity", follower.getVelocity());
+//        telemetryM.debug("automatedDrive", automatedDrive);
 
-        telemetryM.debug("targetVelocity", LauncherFlywheelTuning.targetVelocity);
-        telemetryM.debug("actualVelocity", flywheelMotor.getVelocity());
+//        telemetryM.debug("targetVelocity", LauncherFlywheelTuning.targetVelocity);
+//        telemetryM.debug("actualVelocity", flywheelMotor.getVelocity());
+
+  /*      telemetry.addData("position", follower.getPose());
+        telemetry.addData("velocity", follower.getVelocity());
+        telemetry.addData("automatedDrive", automatedDrive);
+*/
+        telemetry.addData("targetVelocity", LauncherFlywheelTuning.targetVelocity);
+        telemetry.addData("actualVelocity", flywheelMotor.getVelocity());
+        //telemetry.addData("kickstandPosition", kickstandMotor.getCurrentPosition());
+        //telemetry.addData("kickstand button was pressed", kickstandMotor.getCurrent(CurrentUnit.AMPS));
+
+        //telemetry.addData("kickstand current", hardwareMap.get(DcMotorEx.class, "kickstandMotor").getCurrent(CurrentUnit.AMPS));
+        //telemetry.addData("intake current", hardwareMap.get(DcMotorEx.class, "intakeMotor").getCurrent(CurrentUnit.AMPS));
+        telemetry.addData("launcher current", flywheelMotor.getCurrent(CurrentUnit.AMPS));
+        telemetry.addData("launcher power", flywheelMotor.getPower());
+        //telemetry.addData("rf current", hardwareMap.get(DcMotorEx.class, "rightFront").getCurrent(CurrentUnit.AMPS));
+        //telemetry.addData("lf current", hardwareMap.get(DcMotorEx.class, "leftFront").getCurrent(CurrentUnit.AMPS));
+        //telemetry.addData("rb current", hardwareMap.get(DcMotorEx.class, "rightBack").getCurrent(CurrentUnit.AMPS));
+        //telemetry.addData("lb current", hardwareMap.get(DcMotorEx.class, "leftBack").getCurrent(CurrentUnit.AMPS));
+
+        telemetry.update();
     }
 }

@@ -9,6 +9,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
+
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 /**
  * TeleOp for live-tuning the launcher flywheel velocity controller.
@@ -39,7 +42,8 @@ public class TuneLauncher extends LinearOpMode {
 
         // We are doing our own velocity control -> avoid built-in velocity mode.
         flywheelMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flywheelMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        flywheelMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
 
         LauncherFlywheelController controller = new LauncherFlywheelController(flywheelMotor);
 
@@ -64,10 +68,20 @@ public class TuneLauncher extends LinearOpMode {
             panelsTelemetry.addData("Error", error);
             panelsTelemetry.addData("Measured", measuredVel);
 
+            panelsTelemetry.addData("RPM", convertToRpm(measuredVel));
+
+            panelsTelemetry.addData("position", flywheelMotor.getCurrentPosition());
+            panelsTelemetry.addData("amps", flywheelMotor.getCurrent(CurrentUnit.AMPS));
+
+            //flywheelMotor.setVelocity(targetVel);
             panelsTelemetry.update();
         }
 
         controller.stop();
+    }
+
+    private double convertToRpm(double ticksPerSecond) {
+        return (ticksPerSecond / 28) * 60;
     }
 }
 
