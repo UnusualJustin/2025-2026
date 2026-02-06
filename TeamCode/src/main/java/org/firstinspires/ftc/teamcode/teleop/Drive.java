@@ -7,8 +7,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import java.util.Locale;
-
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
@@ -18,6 +16,8 @@ import org.firstinspires.ftc.teamcode.subsystems.config.FlywheelConfig;
 import org.firstinspires.ftc.teamcode.targeting.AimingCalculator;
 import org.firstinspires.ftc.teamcode.targeting.DistanceProvider;
 import org.firstinspires.ftc.teamcode.targeting.TeamConfig;
+
+import java.util.Locale;
 
 import dev.nextftc.core.commands.CommandManager;
 import dev.nextftc.core.components.BindingsComponent;
@@ -370,37 +370,42 @@ public class Drive extends NextFTCOpMode {
         boolean anchorGood = distanceInches(currentPose, aimAnchorPose) <= AIM_ANCHOR_TOL_IN;
         boolean flywheelReady = Flywheel.INSTANCE.isAtSpeed();
 
-        telemetryM.debug("==================== DRIVE ====================");
+        telemetryM.debug("=== DRIVE ===");
         telemetryM.debug(String.format(
                 Locale.US,
-                "Mode:%s  Slow:%s  Input:%s  Match:%s",
+                "Mode: %s  Slow:%s  Input: %s  Match: %s",
                 activeDriveMode(),
                 asStatus(slowMode),
                 asStatus(input.driverInputDetected()),
                 formatMatchTime(elapsedSec)));
-
+        telemetryM.debug();
         telemetryM.debug(String.format(
                 Locale.US,
-                "Pose X:%6.2f  Y:%6.2f  H:%6.1f°",
+                "Pose X: %6.2f  Y: %6.2f  H: %6.1f°",
                 currentPose.getX(),
                 currentPose.getY(),
                 Math.toDegrees(currentPose.getHeading())));
+        telemetryM.debug();
+        telemetryM.debug("Holds: idle=" + asStatus(idleHoldActive)
+                + " aim=" + asStatus(aimHoldActive)
+                + " pendingIdle=" + asStatus(pendingIdleHold));
+        telemetryM.debug();
 
-        telemetryM.debug("=================== SHOOTER ===================");
+        telemetryM.debug("=== SHOOTER ===");
         telemetryM.debug(String.format(
                 Locale.US,
-                "Dist:%5.1fin  RPM:%4.0f/%4.0f  Err:%+5.1f",
+                "Dist: %5.1fin  RPM: %4.0f/%4.0f  Err: %+5.1f",
                 distanceToGoal,
                 currentRpm,
                 targetRpm,
                 rpmError));
-
-        telemetryM.debug("================ AIMING CHECKS ================");
+        telemetryM.debug();
         telemetryM.debug(String.format(
                 Locale.US,
                 "%s Aim requested    %s Flywheel at speed",
                 asStatus(aimRequested),
                 asStatus(flywheelReady)));
+        telemetryM.debug();
         telemetryM.debug(String.format(
                 Locale.US,
                 "%s Heading in tol   %s Anchor in tol",
@@ -410,10 +415,8 @@ public class Drive extends NextFTCOpMode {
         if (aimRequested && !(headingGood && anchorGood && flywheelReady)) {
             telemetryM.debug("Blocked by: " + firstBlockingCondition(headingGood, anchorGood, flywheelReady));
         }
-
-        telemetryM.debug("Holds: idle=" + asStatus(idleHoldActive)
-                + " aim=" + asStatus(aimHoldActive)
-                + " pendingIdle=" + asStatus(pendingIdleHold));
+        telemetryM.debug();
+        telemetryM.debug("=== KICKSTAND ===");
         telemetryM.debug("Kickstand: " + hardwareMap.get(DcMotorEx.class, "kickstand"));
     }
 
