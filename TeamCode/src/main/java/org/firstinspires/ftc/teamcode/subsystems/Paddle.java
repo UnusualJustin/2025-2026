@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import org.firstinspires.ftc.teamcode.subsystems.config.PaddleConfig;
+
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.groups.SequentialGroup;
@@ -14,24 +16,19 @@ public final class Paddle implements Subsystem {
     private Paddle() {
     }
 
-    private final ServoEx paddleServo = new ServoEx("paddleServo");
+    private final ServoEx paddleServo = new ServoEx("paddle");
 
-    private static final double DOWN = 0.58;
-
-    private static final double UP = 0.83;
-
-    private static final double FEED_TIME_SEC = 0.25;
 
     // Simple commands you can reuse elsewhere
-    public final Command lower = new SetPosition(paddleServo, DOWN).requires(this);
+    public final Command lower = new SetPosition(paddleServo, PaddleConfig.downPosition).requires(this);
 
-    public final Command raise = new SetPosition(paddleServo, UP).requires(this);
+    public final Command raise = new SetPosition(paddleServo, PaddleConfig.upPosition).requires(this);
 
     /**
      * One feed cycle: raise -> wait -> lower.
      */
     public Command feedOnce() {
-        return new SequentialGroup(raise, new Delay(FEED_TIME_SEC),
+        return new SequentialGroup(raise, new Delay(PaddleConfig.feedTimeSeconds),
                 lower).requires(this);
     }
 

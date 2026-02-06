@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.teleop;
+package org.firstinspires.ftc.teamcode.auto;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 
 
-@Autonomous
+@Autonomous(name = "Set paddle server to .5", group = "setup")
 public final class PointFiveServo extends LinearOpMode {
 
     @Override

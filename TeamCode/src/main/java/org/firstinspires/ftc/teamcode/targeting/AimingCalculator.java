@@ -4,26 +4,14 @@ import com.pedropathing.geometry.Pose;
 
 public final class AimingCalculator {
 
-    // ------------------------------------------------------------
-    // GOAL ENUM
-    // ------------------------------------------------------------
-
     public enum Goal {
         BLUE_GOAL,   // (0, 144)
         RED_GOAL     // (144, 144)
     }
 
-    // ------------------------------------------------------------
-    // BASE GOAL COORDINATES
-    // ------------------------------------------------------------
-
     private static final double BLUE_GOAL_X = 0.0;
     private static final double RED_GOAL_X = 144.0;
     private static final double GOAL_Y = 144.0;
-
-    // ------------------------------------------------------------
-    // OFFSET CONFIGURATION
-    // ------------------------------------------------------------
 
     private static final double FIELD_CENTER = 72.0;
     private static final double OFFSET_MAX = 12.0;
@@ -32,22 +20,28 @@ public final class AimingCalculator {
         // static utility
     }
 
-    // ------------------------------------------------------------
-    // PUBLIC API
-    // ------------------------------------------------------------
-
     /**
-     * Returns a new Pose with the same x/y as the robot,
-     * but a heading that aims at the selected goal.
+     * Returns the dynamically-shifted goal point (x,y) the robot should aim toward.
+     * Heading is unused and set to 0.
      */
-    public static Pose computeAimPose(Pose currentPose, Goal goal) {
+    public static Pose computeDynamicGoalPose(Pose currentPose, Goal goal) {
         double baseGoalX = (goal == Goal.BLUE_GOAL) ? BLUE_GOAL_X : RED_GOAL_X;
 
         double targetX = computeDynamicGoalX(currentPose.getX(), baseGoalX);
         double targetY = computeDynamicGoalY(currentPose.getY());
 
-        double deltaX = targetX - currentPose.getX();
-        double deltaY = targetY - currentPose.getY();
+        return new Pose(targetX, targetY, 0.0);
+    }
+
+    /**
+     * Returns a new Pose with the same x/y as the robot,
+     * but a heading that aims at the dynamically-shifted goal point.
+     */
+    public static Pose computeAimPose(Pose currentPose, Goal goal) {
+        Pose target = computeDynamicGoalPose(currentPose, goal);
+
+        double deltaX = target.getX() - currentPose.getX();
+        double deltaY = target.getY() - currentPose.getY();
 
         double headingRad = Math.atan2(deltaY, deltaX);
 
@@ -58,16 +52,13 @@ public final class AimingCalculator {
         );
     }
 
-    /**
-     * Convenience if you only want the heading for a turn controller.
-     */
     public static double computeAimHeadingRad(Pose currentPose, Goal goal) {
         return computeAimPose(currentPose, goal).getHeading();
     }
 
-    // ------------------------------------------------------------
+    // ----------------------------
     // INTERNAL COMPUTATION
-    // ------------------------------------------------------------
+    // ----------------------------
 
     private static double computeDynamicGoalX(double robotX, double baseGoalX) {
         double distanceFromGoalX = Math.abs(baseGoalX - robotX);
@@ -90,10 +81,6 @@ public final class AimingCalculator {
 
         return lerp(GOAL_Y, GOAL_Y - OFFSET_MAX, offsetFactor);
     }
-
-    // ------------------------------------------------------------
-    // UTILS
-    // ------------------------------------------------------------
 
     private static double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
