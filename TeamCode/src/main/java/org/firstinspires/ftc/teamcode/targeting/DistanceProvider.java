@@ -12,12 +12,14 @@ public final class DistanceProvider {
     private DistanceProvider() {
     }
 
-    /** Returns distance from current pose to (targetX, targetY). */
+    /**
+     * Returns distance from current pose to (targetX, targetY).
+     */
     public double getDistance() {
         Follower follower = PedroComponent.follower();
 
         Pose current = follower.getPose();
-        Pose target = AimingCalculator.computeDynamicGoalPose(current, AimingCalculator.Goal.BLUE_GOAL);
+        Pose target = AimingCalculator.computeDynamicGoalPose(current, TeamConfig.goal);
 
         double dx = target.getX() - current.getX();
         double dy = target.getY() - current.getY();

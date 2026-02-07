@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static dev.nextftc.control.builder.ControlSystemBuilderKt.controlSystem;
 
+import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.teamcode.subsystems.config.FlywheelConfig;
@@ -137,5 +138,16 @@ public final class Flywheel implements Subsystem {
             system.basicFF(FlywheelConfig.ffV, FlywheelConfig.ffA, FlywheelConfig.ffS);
             return Unit.INSTANCE;
         });
+    }
+
+    public void publishTelemetry(TelemetryManager telemetryM) {
+        double targetRpm = getTargetRpm();
+        double currentRpm = getCurrentRpm();
+        double rpmError = targetRpm - currentRpm;
+
+        // These should appear as numeric series in Panels
+        telemetryM.addData("flywheel/target_rpm", targetRpm);
+        telemetryM.addData("flywheel/current_rpm", currentRpm);
+        telemetryM.addData("flywheel/error_rpm", rpmError);
     }
 }

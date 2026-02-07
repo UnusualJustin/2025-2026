@@ -127,6 +127,10 @@ final class DriveHoldController {
         return distanceInches(currentPose, aimAnchorPose) <= AIM_ANCHOR_TOL_IN;
     }
 
+    Pose getAimPose() {
+        return aimPose;
+    }
+
     String activeDriveMode() {
         if (aimHoldActive) {
             return "AIM_HOLD";

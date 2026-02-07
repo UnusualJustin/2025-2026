@@ -90,8 +90,6 @@ public class Drive extends NextFTCOpMode {
         }
 
         telemetryM.debug("Use 'back' button to select goal", TeamConfig.goal);
-        telemetryM.debug("");
-        telemetryM.debug("Goal: " + telemetry);
         telemetryM.update(telemetry);
     }
 
@@ -169,7 +167,7 @@ public class Drive extends NextFTCOpMode {
             didShutdown155 = true;
         }
 
-        publishCompetitionTelemetry(input, elapsedSec);
+        publishCompetitionTelemetry(input);
     }
 
     private DriveInput readDriveInput() {
@@ -253,11 +251,7 @@ public class Drive extends NextFTCOpMode {
         Kickstand.INSTANCE.retract();
     }
 
-
-
-
-
-    private void publishCompetitionTelemetry(DriveInput input, double elapsedSec) {
+    private void publishCompetitionTelemetry(DriveInput input) {
         Pose currentPose = PedroComponent.follower().getPose();
         double distanceToGoal = DistanceProvider.INSTANCE.getDistance();
         double targetRpm = Flywheel.INSTANCE.getTargetRpm();
@@ -278,16 +272,26 @@ public class Drive extends NextFTCOpMode {
 
         telemetryM.debug(String.format(
                 Locale.US,
-                "Pose X:%6.2f  Y:%6.2f  H:%6.1f°",
+                "Pose: X:%6.2f  Y:%6.2f  H:%6.1f°",
                 currentPose.getX(),
                 currentPose.getY(),
                 Math.toDegrees(currentPose.getHeading())));
+
+        if (holdController.isAimRequested()){
+            Pose aimPose = holdController.getAimPose();
+            telemetryM.debug(String.format(
+                    Locale.US,
+                    "Aim:  X:%6.2f  Y:%6.2f  H:%6.1f°",
+                    aimPose.getX(),
+                    aimPose.getY(),
+                    Math.toDegrees(aimPose.getHeading())));
+        }
 
         telemetryM.debug("");
         telemetryM.debug("=== LAUNCHER ===");
         telemetryM.debug(String.format(
                 Locale.US,
-                "Distance from target: %5.1fin",
+                "Shot Distance: %5.1fin",
                 distanceToGoal));
         telemetryM.debug(String.format(
                 Locale.US,
@@ -321,17 +325,14 @@ public class Drive extends NextFTCOpMode {
         telemetryM.debug("");
         telemetryM.debug("=== KICKSTAND ===");
         telemetryM.debug("Kickstand position: " + hardwareMap.get(DcMotorEx.class, "kickstand").getCurrentPosition());
+
+        telemetryM.debug("");
+        telemetryM.debug("*** END OF DEBUG ***");
+        telemetryM.debug("");
+        Flywheel.INSTANCE.publishTelemetry(telemetryM);
     }
 
     private String asStatus(boolean ready) {
         return ready ? "[✓]" : "[   ]";
     }
-
-    private String formatMatchTime(double elapsedSec) {
-        int totalSeconds = (int) Math.max(0, Math.floor(elapsedSec));
-        int minutes = totalSeconds / 60;
-        int seconds = totalSeconds % 60;
-        return String.format(Locale.US, "%d:%02d", minutes, seconds);
-    }
-
 }
