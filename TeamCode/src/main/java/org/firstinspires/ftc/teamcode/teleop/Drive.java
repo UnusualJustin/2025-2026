@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import java.util.Locale;
+
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
@@ -183,14 +185,7 @@ public class Drive extends NextFTCOpMode {
             didShutdown155 = true;
         }
 
-        telemetryM.debug("driverInputDetected", input.driverInputDetected());
-        telemetryM.debug("pendingIdleHold", pendingIdleHold);
-        telemetryM.debug("idleHoldActive", idleHoldActive);
-        telemetryM.debug("aimHoldActive", aimHoldActive);
-        telemetryM.debug("target rpm", Flywheel.INSTANCE.getTargetRpm());
-        telemetryM.debug("actual rpm", Flywheel.INSTANCE.getCurrentRpm());
-        telemetryM.debug("distance from target", DistanceProvider.INSTANCE.getDistance());
-        telemetryM.debug("kickstand position", hardwareMap.get(DcMotorEx.class, "kickstand"));
+        publishCompetitionTelemetry(input, elapsedSec);
     }
 
     private DriveInput readDriveInput() {
@@ -362,6 +357,105 @@ public class Drive extends NextFTCOpMode {
 
         // Return follower to normal teleop control (cancels holdPoint)
         PedroComponent.follower().startTeleopDrive();
+    }
+
+    private void publishCompetitionTelemetry(DriveInput input, double elapsedSec) {
+        Pose currentPose = PedroComponent.follower().getPose();
+        double distanceToGoal = DistanceProvider.INSTANCE.getDistance();
+        double targetRpm = Flywheel.INSTANCE.getTargetRpm();
+        double currentRpm = Flywheel.INSTANCE.getCurrentRpm();
+        double rpmError = targetRpm - currentRpm;
+
+        boolean headingGood = angleAbsDiffRad(currentPose.getHeading(), aimPose.getHeading()) <= AIM_HEADING_TOL_RAD;
+        boolean anchorGood = distanceInches(currentPose, aimAnchorPose) <= AIM_ANCHOR_TOL_IN;
+        boolean flywheelReady = Flywheel.INSTANCE.isAtSpeed();
+
+        telemetryM.debug("");
+        telemetryM.debug("==================== DRIVE ====================");
+        telemetryM.debug(String.format(
+                Locale.US,
+                "Mode:%s  Slow:%s  Input:%s  Match:%s",
+                activeDriveMode(),
+                asStatus(slowMode),
+                asStatus(input.driverInputDetected()),
+                formatMatchTime(elapsedSec)));
+
+        telemetryM.debug(String.format(
+                Locale.US,
+                "Pose X:%6.2f  Y:%6.2f  H:%6.1f°",
+                currentPose.getX(),
+                currentPose.getY(),
+                Math.toDegrees(currentPose.getHeading())));
+
+        telemetryM.debug("");
+        telemetryM.debug("=================== SHOOTER ===================");
+        telemetryM.debug(String.format(
+                Locale.US,
+                "Dist:%5.1fin  RPM:%4.0f/%4.0f  Err:%+5.1f",
+                distanceToGoal,
+                currentRpm,
+                targetRpm,
+                rpmError));
+
+        telemetryM.debug("");
+        telemetryM.debug("================ AIMING CHECKS ================");
+        telemetryM.debug(String.format(
+                Locale.US,
+                "%s Aim requested    %s Flywheel at speed",
+                asStatus(aimRequested),
+                asStatus(flywheelReady)));
+        telemetryM.debug(String.format(
+                Locale.US,
+                "%s Heading in tol   %s Anchor in tol",
+                asStatus(headingGood),
+                asStatus(anchorGood)));
+
+        telemetryM.debug("Blocked by: " + firstBlockingCondition(headingGood, anchorGood, flywheelReady));
+
+        telemetryM.debug("Holds: idle=" + asStatus(idleHoldActive)
+                + " aim=" + asStatus(aimHoldActive)
+                + " pendingIdle=" + asStatus(pendingIdleHold));
+        telemetryM.debug("Kickstand: " + hardwareMap.get(DcMotorEx.class, "kickstand"));
+    }
+
+    private String activeDriveMode() {
+        if (aimHoldActive) {
+            return "AIM_HOLD";
+        }
+        if (idleHoldActive) {
+            return "IDLE_HOLD";
+        }
+        if (pendingIdleHold) {
+            return "SETTLING";
+        }
+        return "DRIVER";
+    }
+
+    private String firstBlockingCondition(boolean headingGood, boolean anchorGood, boolean flywheelReady) {
+        if (!aimRequested) {
+            return "Waiting for aim request";
+        }
+        if (!headingGood) {
+            return "Heading not in tolerance";
+        }
+        if (!anchorGood) {
+            return "Robot moved too far while aiming";
+        }
+        if (!flywheelReady) {
+            return "Flywheel not at speed";
+        }
+        return "Ready to fire";
+    }
+
+    private String asStatus(boolean ready) {
+        return ready ? "[X]" : "[ ]";
+    }
+
+    private String formatMatchTime(double elapsedSec) {
+        int totalSeconds = (int) Math.max(0, Math.floor(elapsedSec));
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        return String.format(Locale.US, "%d:%02d", minutes, seconds);
     }
 
 }
