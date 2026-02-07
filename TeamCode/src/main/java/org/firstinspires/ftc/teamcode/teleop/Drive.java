@@ -5,6 +5,7 @@ import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
@@ -16,6 +17,8 @@ import org.firstinspires.ftc.teamcode.subsystems.config.FlywheelConfig;
 import org.firstinspires.ftc.teamcode.targeting.AimingCalculator;
 import org.firstinspires.ftc.teamcode.targeting.DistanceProvider;
 import org.firstinspires.ftc.teamcode.targeting.TeamConfig;
+
+import java.util.Locale;
 
 import dev.nextftc.core.commands.CommandManager;
 import dev.nextftc.core.components.BindingsComponent;
@@ -93,12 +96,22 @@ public class Drive extends NextFTCOpMode {
     public void onWaitForStart() {
         super.onWaitForStart();
 
+        // Monitor "back" button to select team goal
         if (gamepad1.backWasPressed()) {
             TeamConfig.goal = TeamConfig.goal == AimingCalculator.Goal.BLUE_GOAL ?
                     AimingCalculator.Goal.RED_GOAL : AimingCalculator.Goal.BLUE_GOAL;
         }
 
-        telemetryM.debug("goal", TeamConfig.goal);
+        // Set controller LED to match goal color
+        if (TeamConfig.goal == AimingCalculator.Goal.RED_GOAL) {
+            gamepad1.setLedColor(1.0, 0.0, 0.0, Gamepad.LED_DURATION_CONTINUOUS); // red
+        } else if (TeamConfig.goal == AimingCalculator.Goal.BLUE_GOAL) {
+            gamepad1.setLedColor(0.0, 0.0, 1.0, Gamepad.LED_DURATION_CONTINUOUS); // blue
+        }
+
+        telemetryM.debug("Use 'back' button to select goal", TeamConfig.goal);
+        telemetryM.debug("");
+        telemetryM.debug("Goal: " + telemetry);
         telemetryM.update(telemetry);
     }
 
@@ -183,14 +196,7 @@ public class Drive extends NextFTCOpMode {
             didShutdown155 = true;
         }
 
-        telemetryM.debug("driverInputDetected", input.driverInputDetected());
-        telemetryM.debug("pendingIdleHold", pendingIdleHold);
-        telemetryM.debug("idleHoldActive", idleHoldActive);
-        telemetryM.debug("aimHoldActive", aimHoldActive);
-        telemetryM.debug("target rpm", Flywheel.INSTANCE.getTargetRpm());
-        telemetryM.debug("actual rpm", Flywheel.INSTANCE.getCurrentRpm());
-        telemetryM.debug("distance from target", DistanceProvider.INSTANCE.getDistance());
-        telemetryM.debug("kickstand position", hardwareMap.get(DcMotorEx.class, "kickstand"));
+        publishCompetitionTelemetry(input, elapsedSec);
     }
 
     private DriveInput readDriveInput() {
@@ -362,6 +368,112 @@ public class Drive extends NextFTCOpMode {
 
         // Return follower to normal teleop control (cancels holdPoint)
         PedroComponent.follower().startTeleopDrive();
+    }
+
+    private void publishCompetitionTelemetry(DriveInput input, double elapsedSec) {
+        Pose currentPose = PedroComponent.follower().getPose();
+        double distanceToGoal = DistanceProvider.INSTANCE.getDistance();
+        double targetRpm = Flywheel.INSTANCE.getTargetRpm();
+        double currentRpm = Flywheel.INSTANCE.getCurrentRpm();
+        double rpmError = targetRpm - currentRpm;
+
+        boolean headingGood = angleAbsDiffRad(currentPose.getHeading(), aimPose.getHeading()) <= AIM_HEADING_TOL_RAD;
+        boolean anchorGood = distanceInches(currentPose, aimAnchorPose) <= AIM_ANCHOR_TOL_IN;
+        boolean flywheelReady = Flywheel.INSTANCE.isAtSpeed();
+
+        telemetryM.debug("=== DRIVE ===");
+        telemetryM.debug(String.format(
+                Locale.US,
+                "Mode: %s  Slow: %s  Input: %s",
+                activeDriveMode(),
+                asStatus(slowMode),
+                asStatus(input.driverInputDetected())));
+
+        telemetryM.debug(String.format(
+                Locale.US,
+                "Pose X:%6.2f  Y:%6.2f  H:%6.1f°",
+                currentPose.getX(),
+                currentPose.getY(),
+                Math.toDegrees(currentPose.getHeading())));
+
+        telemetryM.debug("");
+        telemetryM.debug("=== LAUNCHER ===");
+        telemetryM.debug(String.format(
+                Locale.US,
+                "Distance from target: %5.1fin",
+                distanceToGoal));
+        telemetryM.debug(String.format(
+                Locale.US,
+                "RPM: %4.0f/%4.0f  Err: %+5.0f",
+                currentRpm,
+                targetRpm,
+                rpmError));
+
+        telemetryM.debug("");
+
+        telemetryM.debug(String.format(
+                Locale.US,
+                "%s Aim requested    %s Flywheel speed",
+                asStatus(aimRequested),
+                asStatus(flywheelReady)));
+        telemetryM.debug(String.format(
+                Locale.US,
+                "%s Heading                %s Anchor",
+                asStatus(headingGood),
+                asStatus(anchorGood)));
+
+        telemetryM.debug("");
+        telemetryM.debug("Blocked by: " + firstBlockingCondition(headingGood, anchorGood, flywheelReady));
+
+        telemetryM.debug("");
+        telemetryM.debug("Holds:");
+        telemetryM.debug(String.format("%s Idle                %s Aiming",
+                asStatus(idleHoldActive),
+                asStatus(aimHoldActive)));
+
+        telemetryM.debug("");
+        telemetryM.debug("=== KICKSTAND ===");
+        telemetryM.debug("Kickstand position: " + hardwareMap.get(DcMotorEx.class, "kickstand").getCurrentPosition());
+    }
+
+    private String activeDriveMode() {
+        if (aimHoldActive) {
+            return "AIM_HOLD";
+        }
+        if (idleHoldActive) {
+            return "IDLE_HOLD";
+        }
+        if (pendingIdleHold) {
+            return "SETTLING";
+        }
+        return "DRIVER";
+    }
+
+    private String firstBlockingCondition(boolean headingGood, boolean anchorGood, boolean flywheelReady) {
+        if (!aimRequested) {
+            return "Waiting for aim request";
+        }
+        if (!headingGood) {
+            return "Heading not in tolerance";
+        }
+        if (!anchorGood) {
+            return "Robot moved too far while aiming";
+        }
+        if (!flywheelReady) {
+            return "Flywheel not at speed";
+        }
+        return "Ready to fire";
+    }
+
+    private String asStatus(boolean ready) {
+        return ready ? "[✓]" : "[   ]";
+    }
+
+    private String formatMatchTime(double elapsedSec) {
+        int totalSeconds = (int) Math.max(0, Math.floor(elapsedSec));
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        return String.format(Locale.US, "%d:%02d", minutes, seconds);
     }
 
 }
