@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Paddle;
 import org.firstinspires.ftc.teamcode.subsystems.PosePublisher;
-import org.firstinspires.ftc.teamcode.subsystems.WaitUntilCommand;
+import org.firstinspires.ftc.teamcode.subsystems.commands.WaitUntilCommand;
 
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.groups.SequentialGroup;
@@ -46,7 +46,7 @@ public class NineBallAuto extends NextFTCOpMode {
         return follower().pathBuilder()
                 .addPath(new BezierLine(
                         RobotConfig.getStartingPose(true),
-                        new Pose(56.000, 102.000)
+                        new Pose(56, 60)
                 ))
                 .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(135))
                 .build();

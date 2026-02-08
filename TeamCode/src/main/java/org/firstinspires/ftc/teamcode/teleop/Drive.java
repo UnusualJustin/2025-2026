@@ -14,7 +14,6 @@ import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Kickstand;
 import org.firstinspires.ftc.teamcode.subsystems.Paddle;
-import org.firstinspires.ftc.teamcode.subsystems.PosePublisher;
 import org.firstinspires.ftc.teamcode.subsystems.config.FlywheelConfig;
 import org.firstinspires.ftc.teamcode.targeting.DistanceProvider;
 
@@ -30,7 +29,7 @@ import dev.nextftc.ftc.components.BulkReadComponent;
 @TeleOp(name = "Drive", group = "teleop")
 public class Drive extends NextFTCOpMode {
 
-    public static Pose startingPose = RobotConfig.getStartingPose(false);
+    public static Pose startingPose;
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
     private boolean slowMode = false;
@@ -60,8 +59,7 @@ public class Drive extends NextFTCOpMode {
                         Flywheel.INSTANCE,
                         Intake.INSTANCE,
                         Kickstand.INSTANCE,
-                        Paddle.INSTANCE,
-                        PosePublisher.INSTANCE),
+                        Paddle.INSTANCE),
 
                 // Pedro integration: creates + updates follower automatically
                 new PedroComponent(Constants::createFollower));
@@ -71,6 +69,7 @@ public class Drive extends NextFTCOpMode {
     public void onInit() {
         PedroComponent.follower().setStartingPose(startingPose == null ? new Pose() : startingPose);
         telemetryM.update(telemetry);
+
     }
 
     @Override
@@ -82,6 +81,7 @@ public class Drive extends NextFTCOpMode {
 
     @Override
     public void onStartButtonPressed() {
+        startingPose = RobotConfig.getStartingPose(false);
         holdController.resetForStart();
 
         Flywheel.INSTANCE.enableAutoFromDistance();
