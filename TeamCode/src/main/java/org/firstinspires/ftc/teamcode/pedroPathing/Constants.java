@@ -18,11 +18,19 @@ import org.firstinspires.ftc.teamcode.config.RobotConfig;
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
             .mass(10.8)
-            .forwardZeroPowerAcceleration(-42.88)
-            .lateralZeroPowerAcceleration(-69.78)
-            .translationalPIDFCoefficients(new PIDFCoefficients(.06, 0, 0, 0))
-            .headingPIDFCoefficients(new PIDFCoefficients(4, 0, 0.1, 0))
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.01, 0, 0.0002, 0.6, 0.04));
+            .forwardZeroPowerAcceleration(-42)
+            .lateralZeroPowerAcceleration(-54.6)
+            .useSecondaryDrivePIDF(true)
+            .useSecondaryHeadingPIDF(true)
+            .holdPointHeadingScaling(1)
+            .holdPointTranslationalScaling(1)
+            .useSecondaryTranslationalPIDF(true)
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.2,0,0, 0.3))
+            .secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(0.03,0,0,0.005))
+            .headingPIDFCoefficients(new PIDFCoefficients(0.25,0,0,0.25))
+            .secondaryHeadingPIDFCoefficients(new PIDFCoefficients(1,0,0,0.01))
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.01,0,0,0.5,0.3))
+            .secondaryDrivePIDFCoefficients(new FilteredPIDFCoefficients(0.002,0,0,0.5,0.2));
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
