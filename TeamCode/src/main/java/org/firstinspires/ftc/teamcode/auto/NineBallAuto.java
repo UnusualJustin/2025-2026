@@ -79,6 +79,7 @@ public class NineBallAuto extends NextFTCOpMode {
                 new SubsystemComponent(
                         Flywheel.INSTANCE,
                         Paddle.INSTANCE,
+                        Intake.INSTANCE,
                         PosePublisher.INSTANCE
                 ),
                 new PedroComponent(Constants::createFollower)

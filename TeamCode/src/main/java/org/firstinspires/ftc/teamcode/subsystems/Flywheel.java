@@ -82,9 +82,15 @@ public final class Flywheel implements Subsystem {
     }
 
     @Override
-    public void periodic() {
-        // Rebuild the controller in case any config variables changed
+    public void initialize() {
+        Subsystem.super.initialize();
         rebuildController();
+    }
+
+    @Override
+    public void periodic() {
+        // When tuning, rebuild the controller in case any config variables changed
+        // rebuildController();
 
         if (autoFromDistance) {
             double distance = DistanceProvider.INSTANCE.getDistance();
