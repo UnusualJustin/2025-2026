@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.teleop;
 
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
+import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -32,11 +33,10 @@ public class Drive extends NextFTCOpMode {
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
     private boolean slowMode = false;
-    private final double slowModeMultiplier = 0.2;
 
     private static final double STICK_DEAD_ZONE = .05;
 
-    private final DriveHoldController holdController = new DriveHoldController();
+    private DriveHoldController holdController;
 
     // ------------------- Endgame timers -------------------
     private final ElapsedTime matchTimer = new ElapsedTime();
@@ -46,7 +46,25 @@ public class Drive extends NextFTCOpMode {
     private static final double RUMBLE_TIME_SEC = 105.0;   // 1:45
     private static final double SHUTDOWN_TIME_SEC = 500.0; // 1:55 is 115.0, has been increased for testing
 
-    public Drive() {
+    private Flywheel flywheel;
+    private Paddle paddle;
+    private Intake intake;
+    private Kickstand kickstand;
+    private Follower follower;
+    private DistanceProvider distanceProvider;
+
+    @Override
+    public void onInit() {
+        super.onInit();
+
+        intake = new Intake();
+        paddle = new Paddle();
+        kickstand = new Kickstand();
+        follower = TeleopConstants.createFollower(hardwareMap);
+        distanceProvider = new DistanceProvider(follower);
+        flywheel = new Flywheel(distanceProvider);
+        holdController = new DriveHoldController(follower, flywheel, paddle);
+
         addComponents(
                 // NextFTC runtime plumbing
                 BindingsComponent.INSTANCE,
@@ -55,30 +73,23 @@ public class Drive extends NextFTCOpMode {
 
                 // Subsystems
                 new SubsystemComponent(
-                        Flywheel.INSTANCE,
-                        Intake.INSTANCE,
-                        Kickstand.INSTANCE,
-                        Paddle.INSTANCE),
+                        flywheel,
+                        intake,
+                        kickstand,
+                        paddle),
 
                 // Pedro integration: creates + updates follower automatically
-                new PedroComponent(TeleopConstants::createFollower));
-    }
-
-    @Override
-    public void onInit() {
-        super.onInit();
-        Flywheel.INSTANCE.disableAutoFromDistance();
-        Flywheel.INSTANCE.stop();
+                new PedroComponent((hardwareDevices -> follower)));
     }
 
     @Override
     public void onStartButtonPressed() {
         startingPose = RobotConfig.getCurrentPose();
-        PedroComponent.follower().setStartingPose(startingPose == null ? new Pose() : startingPose);
-        holdController.resetForStart();
+        follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
+        holdController.start();
 
-        Flywheel.INSTANCE.enableAutoFromDistance();
-        Paddle.INSTANCE.lower.run();
+        flywheel.enableAutoFromDistance();
+        paddle.lower.run();
 
         matchTimer.reset();
         didRumble145 = false;
@@ -106,38 +117,38 @@ public class Drive extends NextFTCOpMode {
 
         // ------------------- Intake ------------------------------------------
         if (gamepad1.leftTriggerWasPressed()) {
-            if (Intake.INSTANCE.isOn()) {
-                Intake.INSTANCE.off();
+            if (intake.isOn()) {
+                intake.off();
             } else {
-                Intake.INSTANCE.on();
+                intake.on();
             }
         }
 
         // ------------------- Flywheel target velocity ------------------------
         if (gamepad1.dpadUpWasPressed()) {
-            Flywheel.INSTANCE.setTargetRpm(FlywheelConfig.targetRpm + 50);
+            flywheel.setTargetRpm(FlywheelConfig.targetRpm + 50);
         } else if (gamepad1.dpadDownWasPressed()) {
-            Flywheel.INSTANCE.setTargetRpm((Math.max(FlywheelConfig.targetRpm - 50, 0)));
+            flywheel.setTargetRpm((Math.max(FlywheelConfig.targetRpm - 50, 0)));
         }
 
         // ------------------- Auto adjust speed for flywheel ------------------
         if (gamepad1.dpadLeftWasPressed()) {
-            Flywheel.INSTANCE.disableAutoFromDistance();
+            flywheel.disableAutoFromDistance();
         } else if (gamepad1.dpadRightWasPressed()) {
-            Flywheel.INSTANCE.enableAutoFromDistance();
+            flywheel.enableAutoFromDistance();
         }
 
         // ------------------- Force shot --------------------------------------
         if (gamepad1.rightTriggerWasPressed()) {
-            Paddle.INSTANCE.feedOnce().run();
+            paddle.feedOnce().run();
         }
 
         // ------------------- Kickstand ---------------------------------------
         if (gamepad1.xWasPressed()) {
             holdController.cancelHolds();
-            Kickstand.INSTANCE.deploy();
+            kickstand.deploy();
         } else if (gamepad1.yWasPressed()) {
-            Kickstand.INSTANCE.retract();
+            kickstand.retract();
         }
 
         double elapsedSec = matchTimer.seconds();
@@ -150,8 +161,8 @@ public class Drive extends NextFTCOpMode {
 
         // Shutdown at 1:55 (once) UPDATED TO 500 SECONDS
         if (!didShutdown155 && elapsedSec >= SHUTDOWN_TIME_SEC) {
-            Flywheel.INSTANCE.stop();
-            Intake.INSTANCE.off();
+            flywheel.stop();
+            intake.off();
             didShutdown155 = true;
         }
 
@@ -162,8 +173,7 @@ public class Drive extends NextFTCOpMode {
         return DriveInput.fromRaw(
                 -gamepad1.left_stick_y,
                 -gamepad1.left_stick_x,
-                -gamepad1.right_stick_x,
-                STICK_DEAD_ZONE);
+                -gamepad1.right_stick_x);
     }
 
 
@@ -177,12 +187,13 @@ public class Drive extends NextFTCOpMode {
         double turn = input.turn();
 
         if (slowMode) {
+            double slowModeMultiplier = 0.2;
             driveY *= slowModeMultiplier;
             driveX *= slowModeMultiplier;
             turn *= slowModeMultiplier;
         }
 
-        PedroComponent.follower().setTeleOpDrive(driveY, driveX, turn, true);
+        follower.setTeleOpDrive(driveY, driveX, turn, true);
     }
 
 
@@ -199,16 +210,16 @@ public class Drive extends NextFTCOpMode {
             this.driverInputDetected = driverInputDetected;
         }
 
-        private static DriveInput fromRaw(double rawDriveY, double rawDriveX, double rawTurn, double deadZone) {
-            double driveY = applyDeadZone(rawDriveY, deadZone);
-            double driveX = applyDeadZone(rawDriveX, deadZone);
-            double turn = applyDeadZone(rawTurn, deadZone);
+        private static DriveInput fromRaw(double rawDriveY, double rawDriveX, double rawTurn) {
+            double driveY = applyDeadZone(rawDriveY);
+            double driveX = applyDeadZone(rawDriveX);
+            double turn = applyDeadZone(rawTurn);
             boolean driverInputDetected = (Math.abs(driveY) > 0.0) || (Math.abs(driveX) > 0.0) || (Math.abs(turn) > 0.0);
             return new DriveInput(driveY, driveX, turn, driverInputDetected);
         }
 
-        private static double applyDeadZone(double value, double deadZone) {
-            if (Math.abs(value) < deadZone) {
+        private static double applyDeadZone(double value) {
+            if (Math.abs(value) < Drive.STICK_DEAD_ZONE) {
                 return 0.0;
             }
             return value;
@@ -234,19 +245,19 @@ public class Drive extends NextFTCOpMode {
     @Override
     public void onStop() {
         super.onStop();
-        Kickstand.INSTANCE.retract();
+        kickstand.retract();
     }
 
     private void publishCompetitionTelemetry(DriveInput input) {
-        Pose currentPose = PedroComponent.follower().getPose();
-        double distanceToGoal = DistanceProvider.INSTANCE.getDistance();
-        double targetRpm = Flywheel.INSTANCE.getTargetRpm();
-        double currentRpm = Flywheel.INSTANCE.getCurrentRpm();
+        Pose currentPose = follower.getPose();
+        double distanceToGoal = distanceProvider.getDistance();
+        double targetRpm = flywheel.getTargetRpm();
+        double currentRpm = flywheel.getCurrentRpm();
         double rpmError = targetRpm - currentRpm;
 
         boolean headingGood = holdController.isHeadingGood(currentPose);
         boolean anchorGood = holdController.isAnchorGood(currentPose);
-        boolean flywheelReady = Flywheel.INSTANCE.isAtSpeed();
+        boolean flywheelReady = flywheel.isAtSpeed();
 
         telemetryM.debug("=== DRIVE ===");
         telemetryM.debug(String.format(
@@ -320,7 +331,7 @@ public class Drive extends NextFTCOpMode {
         telemetryM.debug("");
         telemetryM.debug("*** END OF DEBUG ***");
         telemetryM.debug("");
-        Flywheel.INSTANCE.publishTelemetry(telemetryM);
+        flywheel.publishTelemetry(telemetryM);
     }
 
     private String asStatus(boolean ready) {

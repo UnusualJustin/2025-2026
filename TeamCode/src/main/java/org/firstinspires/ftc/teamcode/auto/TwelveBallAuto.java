@@ -1,9 +1,8 @@
 package org.firstinspires.ftc.teamcode.auto;
 
-import static dev.nextftc.extensions.pedro.PedroComponent.follower;
-
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
+import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -16,6 +15,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Paddle;
 import org.firstinspires.ftc.teamcode.subsystems.PosePublisher;
 import org.firstinspires.ftc.teamcode.subsystems.commands.WaitUntilCommand;
+import org.firstinspires.ftc.teamcode.targeting.DistanceProvider;
 
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.delays.Delay;
@@ -35,7 +35,7 @@ public class TwelveBallAuto extends NextFTCOpMode {
     private final ElapsedTime autoTimer = new ElapsedTime();
     private boolean didFlywheelCutoff = false;
 
-    public final class AutoPaths {
+    public final static class AutoPaths {
 
         private final double shootingAngle = 140; //deg
         private final Pose blueStartingPose = new Pose(55, 8, Math.toRadians(90));
@@ -95,25 +95,32 @@ public class TwelveBallAuto extends NextFTCOpMode {
 
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
-    public TwelveBallAuto() {
-        addComponents(
-                new SubsystemComponent(
-                        Flywheel.INSTANCE,
-                        Paddle.INSTANCE,
-                        Intake.INSTANCE,
-                        PosePublisher.INSTANCE
-                ),
-                new PedroComponent(AutoConstants::createFollower)
-        );
-    }
+    private Flywheel flywheel;
+    private Paddle paddle;
+    private Intake intake;
+    private Follower follower;
 
     @Override
     public void onInit() {
         super.onInit();
-        Paddle.INSTANCE.lower.run();
-        Flywheel.INSTANCE.disableAutoFromDistance();
-        Flywheel.INSTANCE.stop();
-        didFlywheelCutoff = false;
+
+        paddle = new Paddle();
+        intake = new Intake();
+        follower = AutoConstants.createFollower(hardwareMap);
+        DistanceProvider distanceProvider = new DistanceProvider(follower);
+        flywheel = new Flywheel(distanceProvider);
+
+        addComponents(
+                new SubsystemComponent(
+                        flywheel,
+                        paddle,
+                        intake,
+                        new PosePublisher(follower)
+                ),
+                new PedroComponent((hardwareDevices -> follower))
+        );
+
+        paddle.lower.run();
     }
 
     @Override
@@ -132,8 +139,8 @@ public class TwelveBallAuto extends NextFTCOpMode {
         double remaining = AUTO_LENGTH_SEC - elapsed;
 
         if (!didFlywheelCutoff && remaining <= FLYWHEEL_CUTOFF_REMAINING_SEC) {
-            Flywheel.INSTANCE.stop();
-            Intake.INSTANCE.off();
+            flywheel.stop();
+            intake.off();
             didFlywheelCutoff = true;
         }
     }
@@ -141,82 +148,82 @@ public class TwelveBallAuto extends NextFTCOpMode {
     private Command autoRoutine() {
         AutoPaths paths = new AutoPaths();
 
-        follower().setStartingPose(paths.getStartingPose());
+        follower.setStartingPose(paths.getStartingPose());
 
         return new SequentialGroup(
-                Paddle.INSTANCE.lower,
+                paddle.lower,
 
                 // Enable distance-based flywheel RPM
-                new InstantCommand(Flywheel.INSTANCE::enableAutoFromDistance),
+                new InstantCommand(flywheel::enableAutoFromDistance),
 
                 // Move forward to shoot preloaded balls
-                new FollowPath(paths.shootPreloadPath.build(follower(), GoalConfig.goal)),
+                new FollowPath(paths.shootPreloadPath.build(follower, GoalConfig.goal)),
 
                 // Shoot preloaded balls
                 shootCommand(),
-                new InstantCommand(Intake.INSTANCE::on),
+                new InstantCommand(intake::on),
                 new Delay(0.25),
                 shootCommand(),
                 new Delay(0.25),
                 shootCommand(),
 
                 // Collect balls 4-6 and drive to shooting position
-                new FollowPath(paths.collect4_6.build(follower(), GoalConfig.goal)),
-                new InstantCommand(Intake.INSTANCE::off),
+                new FollowPath(paths.collect4_6.build(follower, GoalConfig.goal)),
+                new InstantCommand(intake::off),
 
                 // Drive to shooting location
-                new FollowPath(paths.shoot4_6.build(follower(), GoalConfig.goal)),
+                new FollowPath(paths.shoot4_6.build(follower, GoalConfig.goal)),
 
                 // Shoot balls 3-6
                 shootCommand(),
                 new Delay(0.25),
-                new InstantCommand(Intake.INSTANCE::on),
+                new InstantCommand(intake::on),
                 shootCommand(),
                 new Delay(0.25),
                 shootCommand(),
 
                 //Collect balls 7-9
-                new FollowPath(paths.collect7_9a.build(follower(), GoalConfig.goal)),
-                new FollowPath(paths.collect7_9b.build(follower(), GoalConfig.goal)),
-                new InstantCommand(Intake.INSTANCE::off),
+                new FollowPath(paths.collect7_9a.build(follower, GoalConfig.goal)),
+                new FollowPath(paths.collect7_9b.build(follower, GoalConfig.goal)),
+                new InstantCommand(intake::off),
 
                 // Drive to shooting location
-                new FollowPath(paths.shoot7_9.build(follower(), GoalConfig.goal)),
+                new FollowPath(paths.shoot7_9.build(follower, GoalConfig.goal)),
 
                 //Shoot balls 7-9
                 shootCommand(),
                 new Delay(0.25),
-                new InstantCommand(Intake.INSTANCE::on),
+                new InstantCommand(intake::on),
                 shootCommand(),
                 new Delay(0.25),
                 shootCommand(),
 
                 //Collect balls 10-12
-                new FollowPath(paths.collect10_12.build(follower(), GoalConfig.goal)),
-                new InstantCommand(Intake.INSTANCE::off),
+                new FollowPath(paths.collect10_12.build(follower, GoalConfig.goal)),
+                new InstantCommand(intake::off),
 
                 // Drive to shooting location
-                new FollowPath(paths.shoot10_12.build(follower(), GoalConfig.goal)),
+                new FollowPath(paths.shoot10_12.build(follower, GoalConfig.goal)),
 
                 // shoot balls 10-12
                 shootCommand(),
                 new Delay(0.25),
-                new InstantCommand(Intake.INSTANCE::on),
+                new InstantCommand(intake::on),
                 shootCommand(),
                 new Delay(0.25),
                 shootCommand(),
 
                 // Stop flywheel after shooting
-                new InstantCommand(Flywheel.INSTANCE::stop),
-                new InstantCommand(Intake.INSTANCE::off)
+                new InstantCommand(flywheel::stop),
+                new InstantCommand(intake::off)
         );
     }
 
     private Command shootCommand() {
         if (!didFlywheelCutoff) {
             return new SequentialGroup(
-                    new WaitUntilCommand(Flywheel.INSTANCE::isAtSpeed),
-                    Paddle.INSTANCE.feedOnce());
+                    new WaitUntilCommand(flywheel::isAtSpeed),
+                    paddle.feedOnce());
         }
 
         return new InstantCommand(() -> {

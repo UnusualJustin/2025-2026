@@ -8,13 +8,7 @@ import dev.nextftc.hardware.impl.MotorEx;
 
 /** Controls the intake motor in two states: on (collecting) or off. */
 public final class Intake implements Subsystem {
-
-    public static final Intake INSTANCE = new Intake();
-
     private final MotorEx intakeMotor = new MotorEx(RobotConfig.intakeMotorName);
-
-    private Intake() {
-    }
 
     /** Runs the intake at the configured collection power. */
     public void on() {

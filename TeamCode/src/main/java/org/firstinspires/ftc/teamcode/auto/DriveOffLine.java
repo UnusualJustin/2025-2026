@@ -1,9 +1,8 @@
 package org.firstinspires.ftc.teamcode.auto;
 
-import static dev.nextftc.extensions.pedro.PedroComponent.follower;
-
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
+import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
@@ -21,7 +20,7 @@ import dev.nextftc.ftc.NextFTCOpMode;
 
 @Autonomous(name = "Drive off line", group = "auto")
 public class DriveOffLine extends NextFTCOpMode {
-    public final class AutoPaths {
+    public final static class AutoPaths {
         private final Pose blueStartingPose = new Pose(55, 8, Math.toRadians(90));
 
         private final Pose endPose = new Pose(55, 20);
@@ -38,23 +37,30 @@ public class DriveOffLine extends NextFTCOpMode {
 
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
-    public DriveOffLine() {
+    private Follower follower;
+
+    @Override
+    public void onInit() {
+        super.onInit();
+
+        follower = AutoConstants.createFollower(hardwareMap);
+
         addComponents(
                 new SubsystemComponent(
-                        PosePublisher.INSTANCE
+                        new PosePublisher(follower)
                 ),
-                new PedroComponent(AutoConstants::createFollower)
+                new PedroComponent((hardwareDevices -> follower))
         );
     }
 
     private Command autoRoutine() {
         AutoPaths paths = new AutoPaths();
 
-        follower().setStartingPose(paths.getStartingPose());
+        follower.setStartingPose(paths.getStartingPose());
 
         return new SequentialGroup(
                 // Move forward to shoot preloaded balls
-                new FollowPath(paths.movePath.build(follower(), GoalConfig.goal))
+                new FollowPath(paths.movePath.build(follower, GoalConfig.goal))
         );
     }
 
