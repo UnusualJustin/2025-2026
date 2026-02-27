@@ -30,9 +30,9 @@ import dev.nextftc.ftc.NextFTCOpMode;
 public class ThreeBallAuto extends NextFTCOpMode {
     public final static class AutoPaths {
 
-        private final double shootingAngle = 165; //deg
-        private final Pose blueStartingPose = new Pose(25, 127, Math.toRadians(145));
-        private final Pose shortShootingPose = new Pose(55, 127, Math.toRadians(shootingAngle));
+        private final double shootingAngle = 140; //deg
+        private final Pose blueStartingPose = new Pose(12.8, 110.8, Math.toRadians(90));
+        private final Pose shortShootingPose = new Pose(55, 110.8, Math.toRadians(shootingAngle));
 
         public final AutoPathSpec shootPreloadPath = new AutoPathSpec()
                 .addLine(blueStartingPose,
