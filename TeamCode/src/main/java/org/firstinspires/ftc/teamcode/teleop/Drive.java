@@ -46,7 +46,7 @@ public class Drive extends NextFTCOpMode {
     private boolean didShutdown155 = false;
 
     private static final double RUMBLE_TIME_SEC = 105.0;   // 1:45
-    private static final double SHUTDOWN_TIME_SEC = 500.0; // 1:55 is 115.0, has been increased for testing
+    private static final double SHUTDOWN_TIME_SEC = 115.0; // 1:55 is 115.0, has been increased for testing
 
     private final PedroComponent pedroComponent = new PedroComponent(TeleopConstants::createFollower);
 

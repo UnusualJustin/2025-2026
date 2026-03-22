@@ -81,11 +81,11 @@ public class TwelveBallAuto extends NextFTCOpMode {
 
         public final AutoPathSpec collect10_12 = new AutoPathSpec()
                 .addLine(shortShootingPose,
-                        new Pose(22, 80))
+                        new Pose(22, 79))
                 .constantHeading(Math.toRadians(180));
 
         public final AutoPathSpec shoot10_12 = new AutoPathSpec()
-                .addLine(new Pose(19, 80),
+                .addLine(new Pose(19, 79),
                         new Pose(57, 100))
                 .linearHeading(Math.toRadians(180), Math.toRadians(145));
 

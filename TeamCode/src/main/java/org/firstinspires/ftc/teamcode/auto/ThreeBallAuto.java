@@ -30,7 +30,7 @@ import dev.nextftc.ftc.NextFTCOpMode;
 public class ThreeBallAuto extends NextFTCOpMode {
     public final static class AutoPaths {
 
-        private final double shootingAngle = 140; //deg
+        private final double shootingAngle = 150; //deg
         private final Pose blueStartingPose = new Pose(12.8, 110.8, Math.toRadians(90));
         private final Pose shortShootingPose = new Pose(55, 110.8, Math.toRadians(shootingAngle));
 
@@ -107,9 +107,9 @@ public class ThreeBallAuto extends NextFTCOpMode {
                 // Shoot preloaded balls
                 shootCommand(),
                 new InstantCommand(intake::on),
-                new Delay(0.25),
+                new Delay(1.00),
                 shootCommand(),
-                new Delay(0.25),
+                new Delay(1.00),
                 shootCommand(),
 
                 // Stop flywheel after shooting
