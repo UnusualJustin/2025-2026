@@ -6,22 +6,25 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.config.GoalConfig;
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel;
+import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Paddle;
 import org.firstinspires.ftc.teamcode.targeting.AimingCalculator;
 
 final class DriveHoldController {
 
-    public DriveHoldController(Follower follower, Flywheel flywheel, Paddle paddle) {
+    public DriveHoldController(Follower follower, Flywheel flywheel, Paddle paddle, Intake intake) {
         this.follower = follower;
         this.flywheel = flywheel;
         this.paddle = paddle;
+        this.intake = intake;
     }
 
     private final Follower follower;
     private final Flywheel flywheel;
     private final Paddle paddle;
+    private final Intake intake;
 
-    private static final double IDLE_SETTLE_SEC = 0.15;
+    private static final double IDLE_SETTLE_SEC = 0.25;
     private static final double TURN_CANCEL_THRESHOLD = 0.02;
 
     private static final double AIM_HEADING_TOL_RAD = Math.toRadians(3.0);
@@ -107,7 +110,7 @@ final class DriveHoldController {
         boolean anchorStillValid = isAnchorGood(currentPose);
 
         if (headingGood && anchorStillValid && flywheel.isAtSpeed()) {
-            paddle.feedOnce().run();
+            paddle.feedOnce(intake).run();
             aimRequested = false;
         }
     }

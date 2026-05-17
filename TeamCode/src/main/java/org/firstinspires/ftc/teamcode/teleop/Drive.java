@@ -78,7 +78,7 @@ public class Drive extends NextFTCOpMode {
         follower = PedroComponent.follower();
         distanceProvider = new DistanceProvider(follower);
         flywheel = new Flywheel(distanceProvider);
-        holdController = new DriveHoldController(follower, flywheel, paddle);
+        holdController = new DriveHoldController(follower, flywheel, paddle, intake);
 
         addComponents(
                 // NextFTC runtime plumbing
@@ -161,7 +161,7 @@ public class Drive extends NextFTCOpMode {
 
         // ------------------- Force shot --------------------------------------
         if (gamepad1.rightTriggerWasPressed()) {
-            paddle.feedOnce().run();
+            paddle.feedOnce(intake).run();
         }
 
         // ------------------- Kickstand ---------------------------------------
