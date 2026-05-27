@@ -137,7 +137,7 @@ public class Drive extends NextFTCOpMode {
         }
 
         // ------------------- Intake ------------------------------------------
-        if (gamepad1.leftTriggerWasPressed()) {
+        if (gamepad2.leftTriggerWasPressed()) {
             if (intake.isOn()) {
                 intake.off();
             } else {

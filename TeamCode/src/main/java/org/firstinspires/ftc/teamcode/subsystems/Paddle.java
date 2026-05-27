@@ -31,7 +31,7 @@ public final class Paddle implements Subsystem {
      * Runs one feed cycle: raise -> wait -> lower.
      */
     public Command feedOnce(Intake intake) {
-        boolean intakeOn = intake.isOn();
+        //boolean intakeOn = intake.isOn();
 
         return new SequentialGroup(
                 new InstantCommand(intake::off),
@@ -39,7 +39,7 @@ public final class Paddle implements Subsystem {
                 new Delay(PaddleConfig.feedTimeSeconds),
                 lower,
                 new Delay(PaddleConfig.feedTimeSeconds),
-                new InstantCommand(() -> {if (intakeOn){ intake.on(); }})).requires(this);
+                new InstantCommand(intake::on)).requires(this);
     }
 
     @Override
